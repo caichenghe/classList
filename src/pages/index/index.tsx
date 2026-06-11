@@ -152,20 +152,31 @@ const IndexPage = () => {
     if (exporting) return;
     setExporting(true);
     try {
-      if (type === 'week') {
-        const url = `/api/export/week?start_date=${startDateStr}&end_date=${endDateStr}`;
-        const res = await Network.downloadFile({ url });
-        console.log('export week pdf:', res);
-        Taro.showToast({ title: '本周排课已导出', icon: 'success' });
+      const env = Taro.getEnv();
+      const isMiniApp = env === Taro.ENV_TYPE.WEAPP || env === Taro.ENV_TYPE.TT;
+      const now = currentDate;
+      const year = now.getFullYear();
+      const m = now.getMonth() + 1;
+      const apiPath = type === 'week'
+        ? `/api/export/week?start_date=${startDateStr}&end_date=${endDateStr}`
+        : `/api/export/month?year=${year}&month=${m}`;
+
+      if (isMiniApp) {
+        // 小程序：下载后用 openDocument 预览
+        const res = await Network.downloadFile({ url: apiPath });
+        console.log('download res:', res);
+        const fp = (res as any).filePath || (res as any).tempFilePath;
+        if (fp) {
+          await Taro.openDocument({ filePath: fp, fileType: 'pdf' });
+        } else {
+          Taro.showToast({ title: '导出文件获取失败', icon: 'none' });
+        }
       } else {
-        const now = currentDate;
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const url = `/api/export/month?year=${year}&month=${month}`;
-        const res = await Network.downloadFile({ url });
-        console.log('export month pdf:', res);
-        Taro.showToast({ title: '本月排课已导出', icon: 'success' });
+        // H5：新窗口打开 PDF
+        const baseUrl = window.location.origin;
+        window.open(`${baseUrl}${apiPath}`, '_blank');
       }
+      Taro.showToast({ title: type === 'week' ? '本周排课已导出' : '本月排课已导出', icon: 'success' });
     } catch (e) {
       console.error('导出失败:', e);
       Taro.showToast({ title: '导出失败，请检查服务', icon: 'none' });
