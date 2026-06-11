@@ -80,7 +80,7 @@ const IndexPage = () => {
   const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
 
   const toggleCollapse = (key: string) => {
-    setCollapsedDates((prev) => ({ ...prev, [key]: !prev[key] }));
+    setCollapsedDates((prev) => ({ ...prev, [key]: prev[key] === undefined ? false : !prev[key] }));
   };
 
   // Form state
@@ -328,7 +328,7 @@ const IndexPage = () => {
                     <Button variant="ghost" size="sm" className="h-6 px-1" onClick={() => toggleCollapse(key)}>
                       <ChevronUp size={14} color="#94a3b8" />
                       <Text className="block text-xs text-slate-400 ml-1">
-                        {collapsedDates[key] ? '展开' : '收起'}
+                        {collapsedDates[key] !== false ? '展开' : '收起'}
                       </Text>
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => openAddDialog(key)}>
@@ -337,7 +337,7 @@ const IndexPage = () => {
                     </Button>
                   </View>
                 </View>
-                {collapsedDates[key] ? null : daySchedules.length === 0 ? (
+                {collapsedDates[key] !== false ? null : daySchedules.length === 0 ? (
                   <View className="bg-white rounded-xl p-4 flex items-center justify-center">
                     <Text className="block text-sm text-slate-400">暂无排课</Text>
                   </View>
