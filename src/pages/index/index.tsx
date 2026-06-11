@@ -52,6 +52,7 @@ interface Schedule {
   end_time: string;
   status: string;
   notes: string | null;
+  location: string | null;
   teacher: { id: number; name: string };
   student: { id: number; name: string };
   course: { id: number; name: string; color: string };
@@ -85,6 +86,7 @@ const IndexPage = () => {
   const [formStartTime, setFormStartTime] = useState('');
   const [formEndTime, setFormEndTime] = useState('');
   const [formNotes, setFormNotes] = useState('');
+  const [formLocation, setFormLocation] = useState('');
 
   const weekRange = getWeekRange(currentDate);
   const startDateStr = fmtDate(weekRange.start);
@@ -156,6 +158,7 @@ const IndexPage = () => {
     setFormStartTime('09:00');
     setFormEndTime('10:00');
     setFormNotes('');
+    setFormLocation('');
     setShowAddDialog(true);
   };
 
@@ -178,6 +181,7 @@ const IndexPage = () => {
             start_time: formStartTime,
             end_time: formEndTime,
             notes: formNotes || null,
+            location: formLocation || null,
           },
         });
         Taro.showToast({ title: '修改成功', icon: 'success' });
@@ -193,6 +197,7 @@ const IndexPage = () => {
             start_time: formStartTime,
             end_time: formEndTime,
             notes: formNotes || undefined,
+            location: formLocation || undefined,
           },
         });
         Taro.showToast({ title: '排课成功', icon: 'success' });
@@ -244,6 +249,7 @@ const IndexPage = () => {
     setFormStartTime(s.start_time);
     setFormEndTime(s.end_time);
     setFormNotes(s.notes || '');
+    setFormLocation(s.location || '');
     setShowAddDialog(true);
   };
 
@@ -355,8 +361,8 @@ const IndexPage = () => {
                                 {statusLabels[s.status] || s.status}
                               </Badge>
                             </View>
-                            {/* 时间 + 修改 + 完成 + 取消 + 删除 一行 */}
-                            <View className="flex flex-row items-center flex-wrap gap-x-2 gap-y-1">
+                            {/* 时间 + 修改 + 完成 + 取消 + 删除 一行（靠右） */}
+                            <View className="flex flex-row items-center justify-end flex-wrap gap-x-2 gap-y-1">
                               <Text className="block text-xs text-slate-500">
                                 {s.start_time} - {s.end_time}
                               </Text>
@@ -395,6 +401,11 @@ const IndexPage = () => {
                             <Text className="block text-xs text-slate-500 mt-1">
                               👩‍🏫 {s.teacher?.name || '未知'} · 👨‍🎓 {s.student?.name || '未知'}
                             </Text>
+                            {s.location && (
+                              <Text className="block text-xs text-slate-500 mt-1">
+                                📍 {s.location}
+                              </Text>
+                            )}
                             {s.notes && (
                               <Text className="block text-xs text-slate-400 mt-1">
                                 📝 {s.notes}
@@ -478,7 +489,9 @@ const IndexPage = () => {
               <View className="bg-gray-50 rounded-xl px-4 py-3">
                 <Select value={formTeacher} onValueChange={setFormTeacher}>
                   <SelectTrigger>
-                    <SelectValue placeholder="选择教师" />
+                    <SelectValue placeholder="选择教师">
+                      {teachers.find(t => String(t.id) === formTeacher)?.name || ''}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {teachers.map((t) => (
@@ -496,7 +509,9 @@ const IndexPage = () => {
               <View className="bg-gray-50 rounded-xl px-4 py-3">
                 <Select value={formStudent} onValueChange={setFormStudent}>
                   <SelectTrigger>
-                    <SelectValue placeholder="选择学生" />
+                    <SelectValue placeholder="选择学生">
+                      {students.find(s => String(s.id) === formStudent)?.name || ''}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {students.map((s) => (
@@ -514,7 +529,9 @@ const IndexPage = () => {
               <View className="bg-gray-50 rounded-xl px-4 py-3">
                 <Select value={formCourse} onValueChange={setFormCourse}>
                   <SelectTrigger>
-                    <SelectValue placeholder="选择课程" />
+                    <SelectValue placeholder="选择课程">
+                      {courses.find(c => String(c.id) === formCourse)?.name || ''}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {courses.map((c) => (
@@ -527,6 +544,18 @@ const IndexPage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </View>
+            </View>
+            {/* 地址 */}
+            <View>
+              <Text className="block text-sm font-medium text-slate-700 mb-1">地址</Text>
+              <View className="bg-gray-50 rounded-xl px-4 py-3">
+                <Input
+                  className="w-full bg-transparent text-sm"
+                  placeholder="上课地点（选填）"
+                  value={formLocation}
+                  onInput={(e) => setFormLocation(e.detail.value)}
+                />
               </View>
             </View>
             {/* 备注 */}

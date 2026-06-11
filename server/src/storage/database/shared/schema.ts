@@ -66,6 +66,7 @@ export const schedules = pgTable(
     end_time: varchar("end_time", { length: 5 }).notNull(), // HH:mm
     status: varchar("status", { length: 20 }).notNull().default("scheduled"), // scheduled / completed / cancelled
     notes: text("notes"),
+    location: varchar("location", { length: 200 }),
     created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },

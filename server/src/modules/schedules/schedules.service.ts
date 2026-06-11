@@ -13,6 +13,7 @@ export interface Schedule {
   end_time: string;
   status: string;
   notes: string | null;
+  location: string | null;
   created_at: string;
   updated_at: string;
   // 关联数据（通过嵌套查询获取）
@@ -30,6 +31,7 @@ export interface CreateScheduleDto {
   end_time: string;
   status?: string;
   notes?: string;
+  location?: string;
 }
 
 export interface UpdateScheduleDto {
@@ -41,6 +43,7 @@ export interface UpdateScheduleDto {
   end_time?: string;
   status?: string;
   notes?: string;
+  location?: string;
 }
 
 @Injectable()
@@ -108,6 +111,7 @@ export class SchedulesService {
         end_time: dto.end_time,
         status: dto.status || 'scheduled',
         notes: dto.notes || null,
+        location: dto.location || null,
       })
       .select('*, teacher:teachers(id, name), student:students(id, name), course:courses(id, name, color)')
       .single();
