@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, ChevronLeft, ChevronRight, ChevronUp, Plus } from 'lucide-react-taro';
+import { Calendar, ChevronLeft, ChevronRight, ChevronUp, Plus, FileText } from 'lucide-react-taro';
 import Taro from '@tarojs/taro';
 
 /* ============ 工具函数 ============ */
@@ -146,6 +146,34 @@ const IndexPage = () => {
 
   const goToday = () => setCurrentDate(new Date());
 
+  // 导出 PDF
+  const [exporting, setExporting] = useState(false);
+  const exportPDF = async (type: 'week' | 'month') => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      if (type === 'week') {
+        const url = `/api/schedules/export/week?start_date=${startDateStr}&end_date=${endDateStr}`;
+        const res = await Network.downloadFile({ url });
+        console.log('export week pdf:', res);
+        Taro.showToast({ title: '本周排课已导出', icon: 'success' });
+      } else {
+        const now = currentDate;
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const url = `/api/schedules/export/month?year=${year}&month=${month}`;
+        const res = await Network.downloadFile({ url });
+        console.log('export month pdf:', res);
+        Taro.showToast({ title: '本月排课已导出', icon: 'success' });
+      }
+    } catch (e) {
+      console.error('导出失败:', e);
+      Taro.showToast({ title: '导出失败，请检查服务', icon: 'none' });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // 打开添加弹窗
   const openAddDialog = (date?: string) => {
     setEditingId(null);
@@ -276,9 +304,19 @@ const IndexPage = () => {
             <ChevronRight size={20} color="#4F46E5" />
           </Button>
         </View>
-        <Button variant="outline" size="sm" className="self-center" onClick={goToday}>
-          <Text className="block text-xs">今天</Text>
-        </Button>
+        <View className="flex flex-row items-center gap-2 self-center">
+          <Button variant="outline" size="sm" onClick={goToday}>
+            <Text className="block text-xs">今天</Text>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportPDF('week')}>
+            <FileText size={14} color="#4F46E5" />
+            <Text className="block text-xs ml-1">导出本周</Text>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => exportPDF('month')}>
+            <FileText size={14} color="#8B5CF6" />
+            <Text className="block text-xs ml-1">导出本月</Text>
+          </Button>
+        </View>
       </View>
 
       {/* 星期行 */}
