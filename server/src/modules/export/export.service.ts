@@ -15,7 +15,7 @@ interface ScheduleRow {
   course?: { id: number; name: string; color: string };
 }
 
-const FONT_PATH = '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf';
+const FONT_PATH = '/usr/share/fonts/opentype/unifont/unifont.otf';
 const PAGE_BOTTOM_MARGIN = 60;
 
 /** 使用 CJK 字体渲染中文文本 */
