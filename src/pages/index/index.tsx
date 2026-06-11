@@ -197,12 +197,8 @@ const IndexPage = () => {
     if (!student) return;
     setExporting(true);
     try {
-      const startDate = weekStart.toISOString().slice(0, 10);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      const endDate = weekEnd.toISOString().slice(0, 10);
-      const apiPath = `/api/export/student?student_id=${student.id}&student_name=${encodeURIComponent(student.name)}&start_date=${startDate}&end_date=${endDate}`;
-      const isMiniApp = [Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv());
+      const apiPath = `/api/export/student?student_id=${student.id}&student_name=${encodeURIComponent(student.name)}&start_date=${startDateStr}&end_date=${endDateStr}`;
+      const isMiniApp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT;
       if (isMiniApp) {
         const res = await Network.downloadFile({ url: apiPath });
         if (res.statusCode === 200) {
@@ -672,9 +668,9 @@ const IndexPage = () => {
           </DialogHeader>
           <View className="space-y-4">
             <View className="bg-gray-50 rounded-xl px-3 py-2">
-              <Picker mode="selector" range={students.map(s => s.name)} onChange={(e) => {
-                const idx = parseInt(e.detail.value);
-                if (students[idx]) setExportStudentId(String(students[idx].id));
+              <Picker mode="selector" range={students.map(s => s.name)} onChange={(e: any) => {
+                const idx = parseInt((e as any).detail.value || '0');
+                if (students[idx]) setExportStudentId(`${students[idx].id}`);
               }}
               >
                 <View className="flex flex-row items-center justify-between py-1">
