@@ -29,6 +29,10 @@ export class ExportService {
       doc.on('data', (chunk: Buffer) => buffers.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
+      doc.registerFont('CJK', '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf');
+      doc.font('CJK');
+      doc.registerFont('CJK', '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf');
+      doc.font('CJK');
 
     // 解析日期范围
     const start = new Date(startDate);
@@ -36,8 +40,8 @@ export class ExportService {
     const dateStr = `${start.getMonth() + 1}月${start.getDate()}日 - ${end.getMonth() + 1}月${end.getDate()}日`;
 
     // 标题
-    doc.fontSize(18).font('Helvetica-Bold').text('英语排课表', { align: 'center' });
-    doc.fontSize(12).font('Helvetica').text(dateStr, { align: 'center' });
+    doc.fontSize(18).text('英语排课表', { align: 'center' });
+    doc.fontSize(12).text(dateStr, { align: 'center' });
     doc.moveDown(1.5);
 
     // 按日期分组
@@ -62,12 +66,12 @@ export class ExportService {
       }
 
       // 日期标题
-      doc.fontSize(13).font('Helvetica-Bold').fillColor('#333').text(dayLabel, { underline: true });
+      doc.fontSize(13).font('CJK').fillColor('#333').text(dayLabel, { underline: true });
       cursor = doc.y + 4;
 
       for (const s of items) {
         const line = `${s.start_time}-${s.end_time}  ${s.teacher?.name || '未知'} · ${s.student?.name || '未知'} · ${s.course?.name || '未知'}`;
-        doc.fontSize(10).font('Helvetica').fillColor('#555');
+        doc.fontSize(10).font('CJK').fillColor('#555');
         doc.text(line, { indent: 10 });
         cursor = doc.y + 2;
 
@@ -107,6 +111,8 @@ export class ExportService {
       doc.on('data', (chunk: Buffer) => buffers.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
+      doc.registerFont('CJK', '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf');
+      doc.font('CJK');
 
     // 按日期分组
     const grouped: Record<string, ScheduleRow[]> = {};
@@ -116,8 +122,8 @@ export class ExportService {
     }
 
     const monthLabel = `${year}年${month}月`;
-    doc.fontSize(18).font('Helvetica-Bold').text('英语排课表', { align: 'center' });
-    doc.fontSize(12).font('Helvetica').text(monthLabel, { align: 'center' });
+    doc.fontSize(18).font('CJK').text('英语排课表', { align: 'center' });
+    doc.fontSize(12).font('CJK').text(monthLabel, { align: 'center' });
     doc.moveDown(1);
 
     const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
@@ -129,7 +135,7 @@ export class ExportService {
     let startY = doc.y;
 
     // 表头
-    doc.fontSize(9).font('Helvetica-Bold').fillColor('#333');
+    doc.fontSize(9).font('CJK').fillColor('#333');
     for (let i = 0; i < 7; i++) {
       doc.text(dayNames[i], startX + i * colW + (colW - 14) / 2, startY, { width: colW, align: 'center' });
     }
@@ -156,13 +162,13 @@ export class ExportService {
 
       // 日期数字
       const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      doc.fontSize(8).font('Helvetica-Bold').fillColor('#666');
+      doc.fontSize(8).font('CJK').fillColor('#666');
       doc.text(String(day), cellX + 2, cellY + 2, { width: 20, align: 'left' });
 
       // 课程内容
       const daySchedules = grouped[dateKey];
       if (daySchedules) {
-        doc.fontSize(6.5).font('Helvetica').fillColor('#333');
+        doc.fontSize(6.5).font('CJK').fillColor('#333');
         let textY = cellY + 14;
         for (const s of daySchedules.slice(0, 3)) {
           const text = `${s.start_time} ${s.teacher?.name || ''}`;

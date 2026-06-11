@@ -16,7 +16,7 @@ export class ExportController {
     const pdfBuffer = await this.exportService.exportWeekPdf(startDate, endDate);
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="schedule_${startDate}_${endDate}.pdf"`,
+      'Content-Disposition': `inline; filename="schedule_${startDate}_${endDate}.pdf"`,
       'Content-Length': pdfBuffer.length,
     });
     res.status(HttpStatus.OK).send(pdfBuffer);
