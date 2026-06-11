@@ -361,11 +361,12 @@ const IndexPage = () => {
                                 {statusLabels[s.status] || s.status}
                               </Badge>
                             </View>
-                            {/* 时间 + 修改 + 完成 + 取消 + 删除 一行（靠右） */}
-                            <View className="flex flex-row items-center justify-end flex-wrap gap-x-2 gap-y-1">
-                              <Text className="block text-xs text-slate-500">
+                            {/* 时间靠左 + 修改/完成/取消/删除 靠右 */}
+                            <View className="flex flex-row items-center justify-between">
+                              <Text className="block text-xs font-medium text-indigo-600">
                                 {s.start_time} - {s.end_time}
                               </Text>
+                              <View className="flex flex-row items-center gap-x-2 flex-shrink-0">
                               <Button variant="ghost" size="sm" className="h-6 px-1" onClick={() => openEditDialog(s)}>
                                 <Text className="block text-xs text-indigo-500">修改</Text>
                               </Button>
@@ -397,6 +398,7 @@ const IndexPage = () => {
                               >
                                 <Text className="block text-xs text-slate-400">删除</Text>
                               </Button>
+                            </View>
                             </View>
                             <Text className="block text-xs text-slate-500 mt-1">
                               👩‍🏫 {s.teacher?.name || '未知'} · 👨‍🎓 {s.student?.name || '未知'}
@@ -436,7 +438,7 @@ const IndexPage = () => {
 
       {/* 添加排课弹窗 */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="overflow-y-auto">
+        <DialogContent style={{ maxHeight: '75vh', overflowY: 'auto' }}>
           <DialogHeader>
             <DialogTitle>
               <Text className="block text-lg font-semibold">{editingId ? '编辑排课' : '添加排课'}</Text>
