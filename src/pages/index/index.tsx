@@ -153,7 +153,7 @@ const IndexPage = () => {
     setExporting(true);
     try {
       if (type === 'week') {
-        const url = `/api/schedules/export/week?start_date=${startDateStr}&end_date=${endDateStr}`;
+        const url = `/api/export/week?start_date=${startDateStr}&end_date=${endDateStr}`;
         const res = await Network.downloadFile({ url });
         console.log('export week pdf:', res);
         Taro.showToast({ title: '本周排课已导出', icon: 'success' });
@@ -161,7 +161,7 @@ const IndexPage = () => {
         const now = currentDate;
         const year = now.getFullYear();
         const month = now.getMonth() + 1;
-        const url = `/api/schedules/export/month?year=${year}&month=${month}`;
+        const url = `/api/export/month?year=${year}&month=${month}`;
         const res = await Network.downloadFile({ url });
         console.log('export month pdf:', res);
         Taro.showToast({ title: '本月排课已导出', icon: 'success' });
