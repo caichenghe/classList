@@ -139,12 +139,19 @@ const IndexPage = () => {
 
   const goToday = () => setCurrentDate(new Date());
 
+  // 折叠状态（按日期）
+  const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
+
+  const toggleCollapse = (key: string) => {
+    setCollapsedDates((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   // 打开添加弹窗
   const openAddDialog = (date?: string) => {
     setEditingId(null);
-    setFormTeacher('');
-    setFormStudent('');
-    setFormCourse('');
+    setFormTeacher(teachers.length === 1 ? String(teachers[0].id) : '');
+    setFormStudent(students.length === 1 ? String(students[0].id) : '');
+    setFormCourse(courses.length === 1 ? String(courses[0].id) : '');
     setFormDate(date || fmtDate(new Date()));
     setFormStartTime('09:00');
     setFormEndTime('10:00');
@@ -230,9 +237,9 @@ const IndexPage = () => {
   // 打开编辑弹窗
   const openEditDialog = (s: Schedule) => {
     setEditingId(s.id);
-    setFormTeacher(String(s.teacher_id));
-    setFormStudent(String(s.student_id));
-    setFormCourse(String(s.course_id));
+    setFormTeacher(teachers.length === 1 ? String(teachers[0].id) : String(s.teacher_id));
+    setFormStudent(students.length === 1 ? String(students[0].id) : String(s.student_id));
+    setFormCourse(courses.length === 1 ? String(courses[0].id) : String(s.course_id));
     setFormDate(s.date);
     setFormStartTime(s.start_time);
     setFormEndTime(s.end_time);
@@ -310,15 +317,22 @@ const IndexPage = () => {
             return (
               <View key={key} className="mb-3">
                 <View className="flex flex-row items-center justify-between mb-1">
-                  <Text className="block text-sm font-semibold text-slate-700">
-                    {fmtDisplay(d)}
-                  </Text>
+                  <View className="flex flex-row items-center gap-2">
+                    <Text className="block text-sm font-semibold text-slate-700">
+                      {fmtDisplay(d)}
+                    </Text>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => toggleCollapse(key)}>
+                      <Text className="block text-xs text-slate-400">
+                        {collapsedDates[key] ? '展开' : '收起'}
+                      </Text>
+                    </Button>
+                  </View>
                   <Button variant="ghost" size="sm" onClick={() => openAddDialog(key)}>
                     <Plus size={16} color="#4F46E5" />
                     <Text className="block text-xs text-indigo-600 ml-1">添加</Text>
                   </Button>
                 </View>
-                {daySchedules.length === 0 ? (
+                {collapsedDates[key] ? null : daySchedules.length === 0 ? (
                   <View className="bg-white rounded-xl p-4 flex items-center justify-center">
                     <Text className="block text-sm text-slate-400">暂无排课</Text>
                   </View>
@@ -332,54 +346,50 @@ const IndexPage = () => {
                             style={{ backgroundColor: s.course?.color || '#8B5CF6', minHeight: 48 }}
                           />
                           <View className="flex-1">
-                            {/* 课程名 + 状态 + 操作按钮 */}
-                            <View className="flex flex-row items-start justify-between">
+                            {/* 课程名 + 状态 */}
+                            <View className="flex flex-row items-center justify-between mb-1">
                               <Text className="block text-sm font-semibold text-slate-900">
                                 {s.course?.name || '未知课程'}
                               </Text>
-                              <View className="flex flex-col items-end gap-1">
-                                <Badge className={`text-xs ${statusVariants[s.status] || ''}`}>
-                                  {statusLabels[s.status] || s.status}
-                                </Badge>
-                                <View className="flex flex-row gap-1">
-                                  {s.status === 'scheduled' && (
-                                    <>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-1"
-                                        onClick={() => updateStatus(s.id, 'completed')}
-                                      >
-                                        <Text className="block text-xs text-green-600">完成</Text>
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-1"
-                                        onClick={() => updateStatus(s.id, 'cancelled')}
-                                      >
-                                        <Text className="block text-xs text-red-500">取消</Text>
-                                      </Button>
-                                    </>
-                                  )}
+                              <Badge className={`text-xs ${statusVariants[s.status] || ''}`}>
+                                {statusLabels[s.status] || s.status}
+                              </Badge>
+                            </View>
+                            {/* 时间 + 修改 + 完成 + 取消 + 删除 一行 */}
+                            <View className="flex flex-row items-center flex-wrap gap-x-2 gap-y-1">
+                              <Text className="block text-xs text-slate-500">
+                                {s.start_time} - {s.end_time}
+                              </Text>
+                              <Button variant="ghost" size="sm" className="h-6 px-1" onClick={() => openEditDialog(s)}>
+                                <Text className="block text-xs text-indigo-500">修改</Text>
+                              </Button>
+                              {s.status === 'scheduled' && (
+                                <>
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     className="h-6 px-1"
-                                    onClick={() => deleteSchedule(s.id)}
+                                    onClick={() => updateStatus(s.id, 'completed')}
                                   >
-                                    <Text className="block text-xs text-slate-400">删除</Text>
+                                    <Text className="block text-xs text-green-600">完成</Text>
                                   </Button>
-                                </View>
-                              </View>
-                            </View>
-                            {/* 时间 + 修改按钮 */}
-                            <View className="flex flex-row items-center gap-2 mt-1">
-                              <Text className="block text-xs text-slate-500">
-                                {s.start_time} - {s.end_time}
-                              </Text>
-                              <Button variant="ghost" size="sm" className="h-5 px-1" onClick={() => openEditDialog(s)}>
-                                <Text className="block text-xs text-indigo-500">修改</Text>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-1"
+                                    onClick={() => updateStatus(s.id, 'cancelled')}
+                                  >
+                                    <Text className="block text-xs text-red-500">取消</Text>
+                                  </Button>
+                                </>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-1"
+                                onClick={() => deleteSchedule(s.id)}
+                              >
+                                <Text className="block text-xs text-slate-400">删除</Text>
                               </Button>
                             </View>
                             <Text className="block text-xs text-slate-500 mt-1">
