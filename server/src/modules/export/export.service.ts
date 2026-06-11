@@ -15,24 +15,12 @@ interface ScheduleRow {
   course?: { id: number; name: string; color: string };
 }
 
+const FONT_PATH = '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf';
+const PAGE_BOTTOM_MARGIN = 60;
+
 @Injectable()
 export class ExportService {
-  private readonly FONT_PATH = '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf';
-  private readonly PAGE_BOTTOM_MARGIN = 60; // 底部留白
-
   constructor(private readonly schedulesService: SchedulesService) {}
-
-  private registerFont(doc: typeof PDFDocument.prototype) {
-    doc.registerFont('CJK', this.FONT_PATH);
-  }
-
-  /** 检查当前页剩余空间是否足够，不够则新建一页并重置 Y */
-  private checkSpace(doc: typeof PDFDocument.prototype, needed: number) {
-    if (doc.y + needed > doc.page.height - this.PAGE_BOTTOM_MARGIN) {
-      doc.addPage();
-      doc.font('CJK');
-    }
-  }
 
   async exportWeekPdf(startDate: string, endDate: string): Promise<Buffer> {
     const result = await this.schedulesService.findByWeek(startDate, endDate);
@@ -44,7 +32,7 @@ export class ExportService {
       doc.on('data', (chunk: Buffer) => buffers.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
-      this.registerFont(doc);
+      doc.registerFont('CJK', FONT_PATH);
       doc.font('CJK');
 
       // 标题
@@ -71,13 +59,19 @@ export class ExportService {
         const dayLabel = `${d.getMonth() + 1}月${d.getDate()}日 ${dayNames[d.getDay()]}`;
 
         // 日期标题占 ~35pt，检查空间
-        this.checkSpace(doc, 35);
+        if (doc.y + 35 > doc.page.height - PAGE_BOTTOM_MARGIN) {
+          doc.addPage();
+          doc.font('CJK');
+        }
         doc.fontSize(13).fillColor('#333').text(dayLabel, { underline: true });
         doc.moveDown(0.3);
 
         for (const s of items) {
           // 每条课程占 ~60pt（含备注、分割线），如果不够则换页
-          this.checkSpace(doc, 60);
+          if (doc.y + 60 > doc.page.height - PAGE_BOTTOM_MARGIN) {
+            doc.addPage();
+            doc.font('CJK');
+          }
 
           const line = `${s.start_time}-${s.end_time}  ${s.teacher?.name || '未知'} · ${s.student?.name || '未知'} · ${s.course?.name || '未知'}`;
           doc.fontSize(10).fillColor('#555').text(line, { indent: 10 });
@@ -115,7 +109,7 @@ export class ExportService {
       doc.on('data', (chunk: Buffer) => buffers.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
-      this.registerFont(doc);
+      doc.registerFont('CJK', FONT_PATH);
       doc.font('CJK');
 
       // 按日期分组
@@ -131,7 +125,7 @@ export class ExportService {
       doc.moveDown(1);
 
       const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
-      const pageWidth = doc.page.width - 40; // 20 margin each side
+      const pageWidth = doc.page.width - 40;
       const colW = pageWidth / 7;
       const rowH = 18;
       const cellH = 82;
@@ -148,16 +142,12 @@ export class ExportService {
 
       const firstDayOfWeek = firstDay.getDay();
 
-      let cellX = startX;
-      let cellY = startY;
-      let prevRow = 0;
-
       for (let day = 1; day <= daysInMonth; day++) {
         const col = (firstDayOfWeek + day - 1) % 7;
         const row = Math.floor((firstDayOfWeek + day - 1) / 7);
 
-        cellX = startX + col * colW;
-        cellY = startY + row * cellH;
+        const cellX = startX + col * colW;
+        const cellY = startY + row * cellH;
 
         // 画格子边框
         doc.rect(cellX, cellY, colW, cellH).strokeColor('#ddd').stroke();
@@ -178,7 +168,6 @@ export class ExportService {
               doc.text(text, cellX + 2, textY, { width: colW - 4, align: 'left' });
               textY += 10;
             } else {
-              // 超出格子显示 +N
               const remaining = daySchedules.length - daySchedules.indexOf(s);
               doc.fontSize(6).fillColor('#999').text(`+${remaining}`, cellX + 2, textY - 10, { width: colW - 4, align: 'left' });
               break;
@@ -189,13 +178,12 @@ export class ExportService {
         // 行末检查是否需要换页
         if (col === 6 && day < daysInMonth) {
           const nextRow = Math.floor((firstDayOfWeek + day) / 7);
-          if (nextRow > prevRow) {
-            prevRow = nextRow;
+          if (nextRow > row) {
             const totalH = startY + (nextRow + 1) * cellH + 20;
             if (totalH > doc.page.height - 40) {
               doc.addPage();
               doc.font('CJK');
-              // 在新的页面上重绘表头
+              // 在新页面重绘表头
               startY = 50;
               doc.fontSize(9).fillColor('#333');
               for (let i = 0; i < 7; i++) {
