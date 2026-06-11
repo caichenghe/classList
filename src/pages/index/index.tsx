@@ -449,16 +449,16 @@ const IndexPage = () => {
                             </View>
                             </View>
                             <Text className="block text-xs text-slate-500 mt-1">
-                              👩‍🏫 {s.teacher?.name || '未知'} · 👨‍🎓 {s.student?.name || '未知'}
+                              教师 {s.teacher?.name || '未知'} · 学生 {s.student?.name || '未知'}
                             </Text>
                             {s.location && (
                               <Text className="block text-xs text-slate-500 mt-1">
-                                📍 {s.location}
+                                地址 {s.location}
                               </Text>
                             )}
                             {s.notes && (
                               <Text className="block text-xs text-slate-400 mt-1">
-                                📝 {s.notes}
+                                备注 {s.notes}
                               </Text>
                             )}
                           </View>

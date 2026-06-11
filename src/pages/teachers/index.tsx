@@ -124,8 +124,8 @@ const TeachersPage = () => {
                 <View className="flex flex-row items-start justify-between">
                   <View className="flex-1">
                     <Text className="block text-base font-semibold text-slate-900">{t.name}</Text>
-                    {t.phone && <Text className="block text-sm text-slate-500 mt-1">📞 {t.phone}</Text>}
-                    {t.email && <Text className="block text-sm text-slate-500">✉️ {t.email}</Text>}
+                    {t.phone && <Text className="block text-sm text-slate-500 mt-1">电话 {t.phone}</Text>}
+                    {t.email && <Text className="block text-sm text-slate-500">邮箱 {t.email}</Text>}
                     {t.bio && <Text className="block text-sm text-slate-400 mt-1">{t.bio}</Text>}
                   </View>
                   <View className="flex flex-row gap-1">

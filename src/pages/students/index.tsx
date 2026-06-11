@@ -141,9 +141,9 @@ const StudentsPage = () => {
                         {s.level}
                       </Text>
                     )}
-                    {s.phone && <Text className="block text-sm text-slate-500 mt-1">📞 {s.phone}</Text>}
-                    {s.parent_name && <Text className="block text-sm text-slate-500">👨‍👩‍👧 家长: {s.parent_name}</Text>}
-                    {s.notes && <Text className="block text-sm text-slate-400 mt-1">📝 {s.notes}</Text>}
+                    {s.phone && <Text className="block text-sm text-slate-500 mt-1">电话 {s.phone}</Text>}
+                    {s.parent_name && <Text className="block text-sm text-slate-500">家长 {s.parent_name}</Text>}
+                    {s.notes && <Text className="block text-sm text-slate-400 mt-1">备注 {s.notes}</Text>}
                   </View>
                   <View className="flex flex-row gap-1">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>

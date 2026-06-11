@@ -137,7 +137,7 @@ const CoursesPage = () => {
                       <View className="w-4 h-4 rounded-full" style={{ backgroundColor: c.color }} />
                       <Text className="block text-base font-semibold text-slate-900">{c.name}</Text>
                     </View>
-                    <Text className="block text-sm text-slate-500 mt-1">⏱ {c.duration_minutes} 分钟</Text>
+                    <Text className="block text-sm text-slate-500 mt-1">时长 {c.duration_minutes} 分钟</Text>
                     {c.description && <Text className="block text-sm text-slate-400 mt-1">{c.description}</Text>}
                   </View>
                   <View className="flex flex-row gap-1">
