@@ -67,22 +67,35 @@ export class ExportService {
         doc.moveDown(0.3);
 
         for (const s of items) {
-          // 每条课程占 ~60pt（含备注、分割线），如果不够则换页
-          if (doc.y + 60 > doc.page.height - PAGE_BOTTOM_MARGIN) {
+          // 每条课程占 ~80pt，如果不够则换页
+          if (doc.y + 80 > doc.page.height - PAGE_BOTTOM_MARGIN) {
             doc.addPage();
             doc.font('CJK');
           }
 
-          const line = `${s.start_time}-${s.end_time}  ${s.teacher?.name || '未知'} · ${s.student?.name || '未知'} · ${s.course?.name || '未知'}`;
-          doc.fontSize(10).fillColor('#555').text(line, { indent: 10 });
+          // 课程名
+          doc.fontSize(11).fillColor('#333').text(s.course?.name || '课程', { indent: 10 });
+          const baseY = doc.y;
 
-          if (s.location) {
-            doc.fontSize(9).fillColor('#888').text(`  📍 ${s.location}`, { indent: 10 });
-          }
+          // 时间
+          doc.fontSize(9).fillColor('#555')
+            .text(`时间：${s.start_time}-${s.end_time}`, { indent: 10 });
 
-          // 画分割线
-          doc.moveTo(30, doc.y + 2).lineTo(565, doc.y + 2).strokeColor('#eee').stroke();
-          doc.moveDown(0.3);
+          // 老师
+          doc.fontSize(9).fillColor('#555')
+            .text(`老师：${s.teacher?.name || '未知'}`, { indent: 10 });
+
+          // 学生
+          doc.fontSize(9).fillColor('#555')
+            .text(`学生：${s.student?.name || '未知'}`, { indent: 10 });
+
+          // 地址
+          doc.fontSize(9).fillColor('#555')
+            .text(`地址：${s.location || '未填写'}`, { indent: 10 });
+
+          // 分割线
+          doc.moveTo(30, doc.y + 4).lineTo(565, doc.y + 4).strokeColor('#eee').stroke();
+          doc.moveDown(0.5);
         }
 
         doc.moveDown(0.5);
@@ -128,7 +141,7 @@ export class ExportService {
       const pageWidth = doc.page.width - 40;
       const colW = pageWidth / 7;
       const rowH = 18;
-      const cellH = 82;
+      const cellH = 96;
 
       const startX = 20;
       let startY = doc.y;
@@ -160,18 +173,20 @@ export class ExportService {
         // 课程内容
         const daySchedules = grouped[dateKey];
         if (daySchedules) {
-          doc.fontSize(6.5).fillColor('#333');
+          doc.fontSize(6).fillColor('#333');
           let textY = cellY + 14;
           for (const s of daySchedules) {
-            const text = `${s.start_time} ${s.teacher?.name || ''}`;
-            if (textY < cellY + cellH - 4) {
-              doc.text(text, cellX + 2, textY, { width: colW - 4, align: 'left' });
-              textY += 10;
-            } else {
+            if (textY >= cellY + cellH - 4) {
               const remaining = daySchedules.length - daySchedules.indexOf(s);
               doc.fontSize(6).fillColor('#999').text(`+${remaining}`, cellX + 2, textY - 10, { width: colW - 4, align: 'left' });
               break;
             }
+            // 课程名 + 时间
+            doc.text(`${s.course?.name || ''} ${s.start_time}`, cellX + 2, textY, { width: colW - 4, align: 'left' });
+            textY += 9;
+            // 老师
+            doc.text(`${s.teacher?.name || ''}`, cellX + 2, textY, { width: colW - 4, align: 'left' });
+            textY += 9;
           }
         }
 
