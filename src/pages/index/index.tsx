@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, ChevronLeft, ChevronRight, Plus } from 'lucide-react-taro';
+import { Calendar, ChevronLeft, ChevronRight, ChevronUp, Plus } from 'lucide-react-taro';
 import Taro from '@tarojs/taro';
 
 /* ============ 工具函数 ============ */
@@ -77,6 +77,11 @@ const IndexPage = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
+
+  const toggleCollapse = (key: string) => {
+    setCollapsedDates((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   // Form state
   const [formTeacher, setFormTeacher] = useState('');
@@ -140,13 +145,6 @@ const IndexPage = () => {
   };
 
   const goToday = () => setCurrentDate(new Date());
-
-  // 折叠状态（按日期）
-  const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
-
-  const toggleCollapse = (key: string) => {
-    setCollapsedDates((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
 
   // 打开添加弹窗
   const openAddDialog = (date?: string) => {
@@ -323,20 +321,21 @@ const IndexPage = () => {
             return (
               <View key={key} className="mb-3">
                 <View className="flex flex-row items-center justify-between mb-1">
-                  <View className="flex flex-row items-center gap-2">
-                    <Text className="block text-sm font-semibold text-slate-700">
-                      {fmtDisplay(d)}
-                    </Text>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => toggleCollapse(key)}>
-                      <Text className="block text-xs text-slate-400">
+                  <Text className="block text-sm font-semibold text-slate-700">
+                    {fmtDisplay(d)}
+                  </Text>
+                  <View className="flex flex-row items-center gap-1">
+                    <Button variant="ghost" size="sm" className="h-6 px-1" onClick={() => toggleCollapse(key)}>
+                      <ChevronUp size={14} color="#94a3b8" />
+                      <Text className="block text-xs text-slate-400 ml-1">
                         {collapsedDates[key] ? '展开' : '收起'}
                       </Text>
                     </Button>
+                    <Button variant="ghost" size="sm" onClick={() => openAddDialog(key)}>
+                      <Plus size={16} color="#4F46E5" />
+                      <Text className="block text-xs text-indigo-600 ml-1">添加</Text>
+                    </Button>
                   </View>
-                  <Button variant="ghost" size="sm" onClick={() => openAddDialog(key)}>
-                    <Plus size={16} color="#4F46E5" />
-                    <Text className="block text-xs text-indigo-600 ml-1">添加</Text>
-                  </Button>
                 </View>
                 {collapsedDates[key] ? null : daySchedules.length === 0 ? (
                   <View className="bg-white rounded-xl p-4 flex items-center justify-center">
