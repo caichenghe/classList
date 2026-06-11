@@ -218,4 +218,99 @@ export class ExportService {
       doc.end();
     });
   }
+
+  async exportByStudentPdf(
+    studentId: number,
+    studentName: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<Buffer> {
+    const { data: schedules } = await this.schedulesService.findByStudent(studentId, startDate, endDate);
+
+    return new Promise((resolve, reject) => {
+      const buffers: Buffer[] = [];
+      const doc = new PDFDocument({ size: 'A4', margin: 20 });
+      doc.registerFont('CJK', FONT_PATH);
+      doc.font('CJK');
+
+      doc.on('data', (b: Buffer) => buffers.push(b));
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+      doc.on('error', reject);
+
+      // 标题
+      doc.font('CJK').fontSize(18).text(`学生排课表 - ${studentName}`, { align: 'center' });
+      doc.font('CJK').fontSize(10).fillColor('#666').text(
+        startDate && endDate ? `${startDate} ~ ${endDate}` : '全部排课',
+        { align: 'center' }
+      );
+      doc.moveDown(1.5);
+
+      // 分割线
+      doc.moveTo(20, doc.y).lineTo(575, doc.y).strokeColor('#ddd').stroke();
+      doc.moveDown(0.5);
+
+      // 按日期分组
+      const grouped: Record<string, any[]> = {};
+      for (const s of schedules) {
+        if (!grouped[s.date]) grouped[s.date] = [];
+        grouped[s.date].push(s);
+      }
+
+      const dates = Object.keys(grouped).sort();
+      if (dates.length === 0) {
+        doc.font('CJK').fontSize(12).fillColor('#999').text('该学生暂无排课记录', { align: 'center' });
+        doc.end();
+        return;
+      }
+
+      for (const date of dates) {
+        // 检查分页
+        if (doc.y > 700) {
+          doc.addPage();
+          doc.font('CJK');
+        }
+
+        const items = grouped[date];
+
+        // 日期标题
+        const d = new Date(date);
+        const weekDay = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+        doc.font('CJK').fontSize(13).fillColor('#4F46E5')
+          .text(`${date.replace('2026-', '').replace('-', '月')}日 周${weekDay}`, { indent: 5 });
+        doc.moveDown(0.3);
+
+        for (const s of items) {
+          // 检查分页
+          if (doc.y > 730) {
+            doc.addPage();
+            doc.font('CJK');
+          }
+
+          const y = doc.y;
+          // 卡片背景
+          doc.roundedRect(30, y - 2, 530, 52, 4).fillColor('#f8f8ff').fill();
+          doc.fillColor('#333');
+          doc.moveDown(0.3);
+
+          // 课程名 + 时间
+          doc.font('CJK').fontSize(11).fillColor('#333');
+          const courseName = s.course?.name || '未知课程';
+          const timeStr = `${s.start_time} - ${s.end_time}`;
+          doc.text(`${courseName}  ${timeStr}`, { indent: 40 });
+
+          // 老师 + 地址
+          doc.font('CJK').fontSize(9).fillColor('#555');
+          const teacherName = s.teacher?.name || '未知';
+          const loc = s.location || '未填写';
+          doc.text(`老师：${teacherName}  |  地址：${loc}`, { indent: 40 });
+
+          doc.moveDown(0.5);
+        }
+
+        doc.moveDown(0.3);
+      }
+
+      doc.end();
+    });
+  }
 }

@@ -22,6 +22,29 @@ export class ExportController {
     res.status(HttpStatus.OK).send(pdfBuffer);
   }
 
+  @Get('student')
+  async exportStudent(
+    @Query('student_id') studentIdStr: string,
+    @Query('student_name') studentName: string,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+    @Res() res: Response,
+  ) {
+    const studentId = parseInt(studentIdStr, 10);
+    if (!studentId) {
+      res.status(HttpStatus.BAD_REQUEST).json({ code: 400, msg: '请提供 student_id 参数' });
+      return;
+    }
+
+    const pdfBuffer = await this.exportService.exportByStudentPdf(studentId, studentName || '未知', startDate, endDate);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="student_${studentId}_schedule.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+    res.status(HttpStatus.OK).send(pdfBuffer);
+  }
+
   @Get('month')
   async exportMonth(@Query('year') yearStr: string, @Query('month') monthStr: string, @Res() res: Response) {
     const year = parseInt(yearStr, 10);

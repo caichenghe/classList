@@ -99,6 +99,26 @@ export class SchedulesService {
     return { data: (data as unknown as Schedule[]) || [] };
   }
 
+  async findByStudent(studentId: number, startDate?: string, endDate?: string): Promise<{ data: Schedule[] }> {
+    let query = client
+      .from('schedules')
+      .select('*, teacher:teachers(id, name), student:students(id, name), course:courses(id, name, color)')
+      .eq('student_id', studentId)
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true });
+
+    if (startDate) {
+      query = query.gte('date', startDate);
+    }
+    if (endDate) {
+      query = query.lte('date', endDate);
+    }
+
+    const { data, error } = await query;
+    if (error) throw new Error(`按学生查询排课失败: ${error.message}`);
+    return { data: (data as unknown as Schedule[]) || [] };
+  }
+
   async create(dto: CreateScheduleDto): Promise<{ data: Schedule }> {
     const { data, error } = await client
       .from('schedules')

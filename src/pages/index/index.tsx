@@ -1,4 +1,4 @@
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import { useState, useEffect, useCallback } from 'react';
 import { Network } from '@/network';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, ChevronLeft, ChevronRight, ChevronUp, Plus, FileText } from 'lucide-react-taro';
+import { Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, FileText } from 'lucide-react-taro';
 import Taro from '@tarojs/taro';
 
 /* ============ 工具函数 ============ */
@@ -78,6 +78,8 @@ const IndexPage = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
+  const [showStudentExport, setShowStudentExport] = useState(false);
+  const [exportStudentId, setExportStudentId] = useState('');
 
   const toggleCollapse = (key: string) => {
     setCollapsedDates((prev) => ({ ...prev, [key]: prev[key] === undefined ? false : !prev[key] }));
@@ -182,6 +184,41 @@ const IndexPage = () => {
       Taro.showToast({ title: '导出失败，请检查服务', icon: 'none' });
     } finally {
       setExporting(false);
+    }
+  };
+
+  // 按学生导出
+  const exportStudentPdf = async () => {
+    if (!exportStudentId) {
+      Taro.showToast({ title: '请选择学生', icon: 'none' });
+      return;
+    }
+    const student = students.find(s => String(s.id) === exportStudentId);
+    if (!student) return;
+    setExporting(true);
+    try {
+      const startDate = weekStart.toISOString().slice(0, 10);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const endDate = weekEnd.toISOString().slice(0, 10);
+      const apiPath = `/api/export/student?student_id=${student.id}&student_name=${encodeURIComponent(student.name)}&start_date=${startDate}&end_date=${endDate}`;
+      const isMiniApp = [Taro.ENV_TYPE.WEAPP, Taro.ENV_TYPE.TT].includes(Taro.getEnv());
+      if (isMiniApp) {
+        const res = await Network.downloadFile({ url: apiPath });
+        if (res.statusCode === 200) {
+          await Taro.openDocument({ filePath: res.tempFilePath });
+        }
+      } else {
+        const baseUrl = window.location.origin;
+        window.open(`${baseUrl}${apiPath}`, '_blank');
+      }
+      Taro.showToast({ title: `${student.name}的排课已导出`, icon: 'success' });
+    } catch (e) {
+      console.error('导出失败:', e);
+      Taro.showToast({ title: '导出失败', icon: 'none' });
+    } finally {
+      setExporting(false);
+      setShowStudentExport(false);
     }
   };
 
@@ -622,6 +659,36 @@ const IndexPage = () => {
             </View>
             <Button className="w-full bg-indigo-600" onClick={handleSubmit}>
               <Text className="block text-white font-medium">{editingId ? '保存修改' : '确认排课'}</Text>
+            </Button>
+          </View>
+        </DialogContent>
+      </Dialog>
+
+      {/* 按学生导出弹窗 */}
+      <Dialog open={showStudentExport} onOpenChange={setShowStudentExport}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>选择学生导出排课</DialogTitle>
+          </DialogHeader>
+          <View className="space-y-4">
+            <View className="bg-gray-50 rounded-xl px-3 py-2">
+              <Picker mode="selector" range={students.map(s => s.name)} onChange={(e) => {
+                const idx = parseInt(e.detail.value);
+                if (students[idx]) setExportStudentId(String(students[idx].id));
+              }}
+              >
+                <View className="flex flex-row items-center justify-between py-1">
+                  <Text className="block text-sm text-gray-500">
+                    {students.find(s => String(s.id) === exportStudentId)?.name || '请选择学生'}
+                  </Text>
+                  <ChevronDown size={16} color="#94a3b8" />
+                </View>
+              </Picker>
+            </View>
+            <Button disabled={!exportStudentId || exporting} className="w-full bg-indigo-600" onClick={exportStudentPdf}>
+              <Text className="block text-white font-medium">
+                {exporting ? '导出中...' : `导出 ${students.find(s => String(s.id) === exportStudentId)?.name || ''} 的排课`}
+              </Text>
             </Button>
           </View>
         </DialogContent>
