@@ -141,6 +141,7 @@ const IndexPage = () => {
 
   // 打开添加弹窗
   const openAddDialog = (date?: string) => {
+    setEditingId(null);
     setFormTeacher('');
     setFormStudent('');
     setFormCourse('');
@@ -151,35 +152,55 @@ const IndexPage = () => {
     setShowAddDialog(true);
   };
 
-  // 提交排课
+  // 提交排课（新建/编辑）
   const handleSubmit = async () => {
     if (!formTeacher || !formStudent || !formCourse || !formDate || !formStartTime || !formEndTime) {
       Taro.showToast({ title: '请填写完整信息', icon: 'none' });
       return;
     }
     try {
-      const res = await Network.request({
-        url: '/api/schedules',
-        method: 'POST',
-        data: {
-          teacher_id: Number(formTeacher),
-          student_id: Number(formStudent),
-          course_id: Number(formCourse),
-          date: formDate,
-          start_time: formStartTime,
-          end_time: formEndTime,
-          notes: formNotes || undefined,
-        },
-      });
-      console.log('create schedule:', res.data);
+      if (editingId) {
+        await Network.request({
+          url: `/api/schedules/${editingId}`,
+          method: 'PUT',
+          data: {
+            teacher_id: Number(formTeacher),
+            student_id: Number(formStudent),
+            course_id: Number(formCourse),
+            date: formDate,
+            start_time: formStartTime,
+            end_time: formEndTime,
+            notes: formNotes || null,
+          },
+        });
+        Taro.showToast({ title: '修改成功', icon: 'success' });
+      } else {
+        await Network.request({
+          url: '/api/schedules',
+          method: 'POST',
+          data: {
+            teacher_id: Number(formTeacher),
+            student_id: Number(formStudent),
+            course_id: Number(formCourse),
+            date: formDate,
+            start_time: formStartTime,
+            end_time: formEndTime,
+            notes: formNotes || undefined,
+          },
+        });
+        Taro.showToast({ title: '排课成功', icon: 'success' });
+      }
       setShowAddDialog(false);
-      Taro.showToast({ title: '排课成功', icon: 'success' });
+      setEditingId(null);
       await loadSchedules();
     } catch (e) {
-      console.error('排课失败:', e);
-      Taro.showToast({ title: '排课失败', icon: 'none' });
+      console.error('保存排课失败:', e);
+      Taro.showToast({ title: '保存失败', icon: 'none' });
     }
   };
+
+  // 编辑排课弹窗
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   // 更新排课状态（快捷操作）
   const updateStatus = async (id: number, status: string) => {
@@ -204,6 +225,19 @@ const IndexPage = () => {
     } catch (e) {
       console.error('删除失败:', e);
     }
+  };
+
+  // 打开编辑弹窗
+  const openEditDialog = (s: Schedule) => {
+    setEditingId(s.id);
+    setFormTeacher(String(s.teacher_id));
+    setFormStudent(String(s.student_id));
+    setFormCourse(String(s.course_id));
+    setFormDate(s.date);
+    setFormStartTime(s.start_time);
+    setFormEndTime(s.end_time);
+    setFormNotes(s.notes || '');
+    setShowAddDialog(true);
   };
 
   // 按日期分组排课
@@ -298,52 +332,63 @@ const IndexPage = () => {
                             style={{ backgroundColor: s.course?.color || '#8B5CF6', minHeight: 48 }}
                           />
                           <View className="flex-1">
-                            <View className="flex flex-row items-center justify-between">
+                            {/* 课程名 + 状态 + 操作按钮 */}
+                            <View className="flex flex-row items-start justify-between">
                               <Text className="block text-sm font-semibold text-slate-900">
                                 {s.course?.name || '未知课程'}
                               </Text>
-                              <Badge className={`text-xs ${statusVariants[s.status] || ''}`}>
-                                {statusLabels[s.status] || s.status}
-                              </Badge>
+                              <View className="flex flex-col items-end gap-1">
+                                <Badge className={`text-xs ${statusVariants[s.status] || ''}`}>
+                                  {statusLabels[s.status] || s.status}
+                                </Badge>
+                                <View className="flex flex-row gap-1">
+                                  {s.status === 'scheduled' && (
+                                    <>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-1"
+                                        onClick={() => updateStatus(s.id, 'completed')}
+                                      >
+                                        <Text className="block text-xs text-green-600">完成</Text>
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 px-1"
+                                        onClick={() => updateStatus(s.id, 'cancelled')}
+                                      >
+                                        <Text className="block text-xs text-red-500">取消</Text>
+                                      </Button>
+                                    </>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-1"
+                                    onClick={() => deleteSchedule(s.id)}
+                                  >
+                                    <Text className="block text-xs text-slate-400">删除</Text>
+                                  </Button>
+                                </View>
+                              </View>
+                            </View>
+                            {/* 时间 + 修改按钮 */}
+                            <View className="flex flex-row items-center gap-2 mt-1">
+                              <Text className="block text-xs text-slate-500">
+                                {s.start_time} - {s.end_time}
+                              </Text>
+                              <Button variant="ghost" size="sm" className="h-5 px-1" onClick={() => openEditDialog(s)}>
+                                <Text className="block text-xs text-indigo-500">修改</Text>
+                              </Button>
                             </View>
                             <Text className="block text-xs text-slate-500 mt-1">
-                              {s.start_time} - {s.end_time}
-                            </Text>
-                            <Text className="block text-xs text-slate-500">
                               👩‍🏫 {s.teacher?.name || '未知'} · 👨‍🎓 {s.student?.name || '未知'}
                             </Text>
                             {s.notes && (
                               <Text className="block text-xs text-slate-400 mt-1">
                                 📝 {s.notes}
                               </Text>
-                            )}
-                            {s.status === 'scheduled' && (
-                              <View className="flex flex-row gap-2 mt-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 px-2"
-                                  onClick={() => updateStatus(s.id, 'completed')}
-                                >
-                                  <Text className="block text-xs text-green-600">完成</Text>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 px-2"
-                                  onClick={() => updateStatus(s.id, 'cancelled')}
-                                >
-                                  <Text className="block text-xs text-red-500">取消</Text>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 px-2"
-                                  onClick={() => deleteSchedule(s.id)}
-                                >
-                                  <Text className="block text-xs text-slate-400">删除</Text>
-                                </Button>
-                              </View>
                             )}
                           </View>
                         </View>
@@ -373,7 +418,7 @@ const IndexPage = () => {
         <DialogContent className="overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              <Text className="block text-lg font-semibold">添加排课</Text>
+              <Text className="block text-lg font-semibold">{editingId ? '编辑排课' : '添加排课'}</Text>
             </DialogTitle>
           </DialogHeader>
           <View className="flex flex-col gap-4 py-2">
@@ -487,7 +532,7 @@ const IndexPage = () => {
               </View>
             </View>
             <Button className="w-full bg-indigo-600" onClick={handleSubmit}>
-              <Text className="block text-white font-medium">确认排课</Text>
+              <Text className="block text-white font-medium">{editingId ? '保存修改' : '确认排课'}</Text>
             </Button>
           </View>
         </DialogContent>
