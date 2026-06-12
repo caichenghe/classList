@@ -360,6 +360,10 @@ const IndexPage = () => {
             <FileText size={14} color="#8B5CF6" />
             <Text className="block text-xs ml-1">导出本月</Text>
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowStudentExport(true)}>
+            <FileText size={14} color="#EC4899" />
+            <Text className="block text-xs ml-1">按学生导出</Text>
+          </Button>
         </View>
       </View>
 
