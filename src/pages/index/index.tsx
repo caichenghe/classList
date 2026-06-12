@@ -197,7 +197,9 @@ const IndexPage = () => {
     if (!student) return;
     setExporting(true);
     try {
-      const apiPath = `/api/export/student?student_id=${student.id}&student_name=${encodeURIComponent(student.name)}&start_date=${startDateStr}&end_date=${endDateStr}`;
+      const monthStart = fmtDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
+      const monthEnd = fmtDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0));
+      const apiPath = `/api/export/student?student_id=${student.id}&student_name=${encodeURIComponent(student.name)}&start_date=${monthStart}&end_date=${monthEnd}`;
       const isMiniApp = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT;
       if (isMiniApp) {
         const res = await Network.downloadFile({ url: apiPath });

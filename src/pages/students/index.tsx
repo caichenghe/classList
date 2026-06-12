@@ -167,7 +167,7 @@ const StudentsPage = () => {
               <Text className="block text-lg font-semibold">{editId ? '编辑学生' : '添加学生'}</Text>
             </DialogTitle>
           </DialogHeader>
-          <View className="flex flex-col gap-4 py-2">
+          <View className="flex flex-col gap-4 py-2 overflow-y-auto max-h-[70vh]">
             <View>
               <Text className="block text-sm font-medium text-slate-700 mb-1">姓名 *</Text>
               <View className="bg-gray-50 rounded-xl px-4 py-3">
