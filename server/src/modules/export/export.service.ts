@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as PDFDocument from 'pdfkit';
+import * as path from 'path';
+import * as fs from 'fs';
 import { SchedulesService } from '@/modules/schedules/schedules.service';
 
 interface ScheduleRow {
@@ -15,7 +17,53 @@ interface ScheduleRow {
   course?: { id: number; name: string; color: string };
 }
 
-const FONT_PATH = '/usr/share/fonts/opentype/unifont/unifont.otf';
+/**
+ * 智能查找 CJK 中文字体文件
+ * 按优先级依次尝试：环境变量 → 项目本地 → 系统字体目录
+ *
+ * 注意：.ttc (TrueType Collection) 在 pdfkit 中不支持字体子集化，
+ * 可能导致 "createSubset is not a function" 错误，因此优先使用 .ttf/.otf。
+ */
+function resolveFontPath(): string {
+  if (process.env.FONT_PATH) return process.env.FONT_PATH;
+
+  const candidates = [
+    // ── 项目本地字体（跨平台推荐） ──
+    path.join(process.cwd(), 'assets', 'fonts', 'NotoSansSC-Regular.otf'),
+    path.join(process.cwd(), 'assets', 'fonts', 'NotoSansSC-Regular.ttf'),
+
+    // ── Windows（.ttf 单字体，支持子集化） ──
+    'C:/Windows/Fonts/NotoSansSC-VF.ttf',   // Noto Sans SC 可变字体
+    'C:/Windows/Fonts/simhei.ttf',           // 黑体
+    'C:/Windows/Fonts/STXIHEI.TTF',          // 华文细黑
+    'C:/Windows/Fonts/Deng.ttf',             // 等线
+
+    // ── Linux ──
+    '/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc',
+    '/usr/share/fonts/noto/NotoSansCJK-Regular.ttc',
+    '/usr/share/fonts/opentype/unifont/unifont.otf',
+    '/usr/share/fonts/truetype/noto/NotoSansSC-Regular.ttf',
+
+    // ── macOS ──
+    '/System/Library/Fonts/STHeiti Light.ttc',
+    '/System/Library/Fonts/PingFang.ttc',
+
+    // ── Windows .ttc 兜底（可能不支持子集化） ──
+    'C:/Windows/Fonts/msyh.ttc',
+    'C:/Windows/Fonts/simsun.ttc',
+  ];
+
+  for (const p of candidates) {
+    if (fs.existsSync(p) && fs.statSync(p).size > 1024) return p;
+  }
+
+  throw new Error(
+    '未找到 CJK 中文字体文件。\n' +
+    '请将字体文件放入 server/assets/fonts/ 目录，或设置环境变量 FONT_PATH。\n' +
+    'Windows 系统通常自带 simhei.ttf（黑体），可直接使用。',
+  );
+}
+
 const PAGE_BOTTOM_MARGIN = 60;
 
 /** 使用 CJK 字体渲染中文文本 */
@@ -25,7 +73,17 @@ function txt(doc: PDFKit.PDFDocument, text: string, options?: object) {
 
 @Injectable()
 export class ExportService {
+  private _fontPath: string | null = null;
+
   constructor(private readonly schedulesService: SchedulesService) {}
+
+  /** 延迟加载字体路径，避免模块初始化时因字体缺失而崩溃 */
+  private getFontPath(): string {
+    if (!this._fontPath) {
+      this._fontPath = resolveFontPath();
+    }
+    return this._fontPath;
+  }
 
   async exportWeekPdf(startDate: string, endDate: string): Promise<Buffer> {
     const result = await this.schedulesService.findByWeek(startDate, endDate);
@@ -37,7 +95,7 @@ export class ExportService {
       doc.on('data', (chunk: Buffer) => buffers.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
-      doc.registerFont('CJK', FONT_PATH);
+      doc.registerFont('CJK', this.getFontPath());
 
       // 标题
       const start = new Date(startDate);
@@ -120,7 +178,7 @@ export class ExportService {
       doc.on('data', (chunk: Buffer) => buffers.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
-      doc.registerFont('CJK', FONT_PATH);
+      doc.registerFont('CJK', this.getFontPath());
 
       // 按日期分组
       const grouped: Record<string, ScheduleRow[]> = {};
@@ -230,7 +288,7 @@ export class ExportService {
     return new Promise((resolve, reject) => {
       const buffers: Buffer[] = [];
       const doc = new PDFDocument({ size: 'A4', margin: 20 });
-      doc.registerFont('CJK', FONT_PATH);
+      doc.registerFont('CJK', this.getFontPath());
       doc.font('CJK');
 
       doc.on('data', (b: Buffer) => buffers.push(b));

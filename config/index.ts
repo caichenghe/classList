@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/postcss';
 import { UnifiedViteWeappTailwindcssPlugin } from 'weapp-tailwindcss/vite';
 import { defineConfig, type UserConfigExport } from '@tarojs/cli';
 import type { PluginItem } from '@tarojs/taro/types/compile/config/project';
+import type { Plugin } from 'vite';
 import dotenv from 'dotenv';
 import devConfig from './dev';
 import prodConfig from './prod';
@@ -33,6 +34,38 @@ const generateTTProjectConfig = (outputRoot: string) => {
     JSON.stringify(config, null, 2),
   );
 };
+
+/**
+ * Vite 插件：移除 WXSS 不支持的 :has() 伪类选择器
+ * 微信小程序 WXSS 编译器不支持 `:has()` 选择器，
+ * 构建完成后直接清理磁盘上的 CSS/WXSS 文件。
+ */
+function stripHasPseudoPlugin(outputRoot: string): Plugin {
+  return {
+    name: 'weapp-strip-has-pseudo',
+    apply: 'build',
+    closeBundle() {
+      const outDir = path.resolve(__dirname, '..', outputRoot);
+      if (!fs.existsSync(outDir)) return;
+
+      const walkDir = (dir: string) => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            walkDir(full);
+          } else if (entry.isFile() && /\.(wxss|css)$/.test(entry.name)) {
+            let code = fs.readFileSync(full, 'utf-8');
+            if (!code.includes(':has(')) continue;
+            // 移除包含 :has() 选择器的 CSS 规则块
+            code = code.replace(/[^{}]*:has\([^{}]*\{[^}]*\}/g, '');
+            fs.writeFileSync(full, code);
+          }
+        }
+      };
+      walkDir(outDir);
+    },
+  };
+}
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
 export default defineConfig<'vite'>(async (merge, _env) => {
@@ -140,6 +173,8 @@ export default defineConfig<'vite'>(async (merge, _env) => {
             };
           },
         },
+        // 小程序端：移除 WXSS 不支持的 :has() 伪类选择器
+        ...(isH5 ? [] : [stripHasPseudoPlugin(outputRoot)]),
         ...(isH5
           ? []
           : [

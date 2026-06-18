@@ -42,5 +42,6 @@ export default defineAppConfig({
         selectedIconPath: './assets/tabbar/book-open-active.png'
       }
     ]
-  }
+  },
+  cloud: true
 })

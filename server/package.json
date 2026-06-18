@@ -19,13 +19,14 @@
     "@supabase/supabase-js": "2.95.3",
     "coze-coding-dev-sdk": "^0.7.24",
     "dotenv": "^17.2.3",
-    "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
     "drizzle-zod": "^0.8.3",
     "express": "5.2.1",
     "pdfkit": "^0.19.1",
     "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "tsconfig-paths": "^4.2.0",
     "zod": "^4.3.5"
   },
   "devDependencies": {

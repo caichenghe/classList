@@ -1,0 +1,26 @@
+{
+  "version": "2.0",
+  "envId": "{{env.ENV_ID}}",
+  "$schema": "https://framework-1258016615.tcloudbaseapp.com/schema/latest.json",
+  "framework": {
+    "name": "classlist-server",
+    "plugins": {
+      "container": {
+        "use": "@cloudbase/framework-plugin-container",
+        "inputs": {
+          "serviceName": "classlist-server",
+          "servicePath": "./",
+          "containerPort": 3000,
+          "dockerfilePath": "Dockerfile",
+          "uploadType": "package",
+          "cpu": 0.5,
+          "mem": 1,
+          "minNum": 1,
+          "maxNum": 3,
+          "policyType": "cpu",
+          "policyThreshold": 60
+        }
+      }
+    }
+  }
+}
