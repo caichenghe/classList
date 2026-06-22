@@ -38,6 +38,9 @@
     "ios >= 8"
   ],
   "dependencies": {
+    "@alloc/quick-lru": "^5.2.0",
+    "@babel/helper-globals": "^7.29.7",
+    "@babel/helper-validator-identifier": "^7.29.7",
     "@babel/runtime": "^7.24.4",
     "@tarojs/components": "4.1.9",
     "@tarojs/helper": "4.1.9",
@@ -60,7 +63,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.4",
+    "@babel/core": "^7.29.7",
     "@babel/plugin-proposal-decorators": "^7.29.7",
     "@babel/plugin-transform-class-properties": "7.25.9",
     "@babel/preset-react": "^7.24.1",

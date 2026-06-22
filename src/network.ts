@@ -2,54 +2,38 @@ import Taro from '@tarojs/taro'
 
 /**
  * 网络请求模块
- * 通过云函数代理调用后端 API，绕过微信小程序域名白名单限制
+ * 封装 Taro.request、Taro.uploadFile、Taro.downloadFile，自动添加项目域名前缀
+ * 如果请求的 url 以 http:// 或 https:// 开头，则不会添加域名前缀
+ *
+ * IMPORTANT: 项目已经全局注入 PROJECT_DOMAIN
+ * IMPORTANT: 除非你需要添加全局参数，如给所有请求加上 header，否则不能修改此文件
  */
 export namespace Network {
-    export const request = async (option: {
-        url: string
-        method?: string
-        data?: any
-        [key: string]: any
-    }) => {
-        try {
-            const result = await Taro.cloud.callFunction({
-                name: 'apiProxy',
-                data: {
-                    path: option.url,
-                    method: option.method || 'GET',
-                    data: option.data || {}
-                }
-            })
-            
-            return {
-                data: result.result,
-                statusCode: 200
-            }
-        } catch (error) {
-            console.error('Cloud Function Error:', error)
-            throw error
+    const createUrl = (url: string): string => {
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url
         }
+        return `${PROJECT_DOMAIN}${url}`
     }
 
-    export const uploadFile = async (option: {
-        url: string
-        filePath: string
-        name: string
-        [key: string]: any
-    }) => {
-        return Taro.uploadFile({
-            url: `${PROJECT_DOMAIN}${option.url}`,
-            filePath: option.filePath,
-            name: option.name
+    export const request: typeof Taro.request = option => {
+        return Taro.request({
+            ...option,
+            url: createUrl(option.url),
         })
     }
 
-    export const downloadFile = async (option: {
-        url: string
-        [key: string]: any
-    }) => {
+    export const uploadFile: typeof Taro.uploadFile = option => {
+        return Taro.uploadFile({
+            ...option,
+            url: createUrl(option.url),
+        })
+    }
+
+    export const downloadFile: typeof Taro.downloadFile = option => {
         return Taro.downloadFile({
-            url: `${PROJECT_DOMAIN}${option.url}`
+            ...option,
+            url: createUrl(option.url),
         })
     }
 }

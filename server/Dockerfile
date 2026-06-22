@@ -3,8 +3,8 @@ FROM node:22-slim
 
 WORKDIR /app
 
-# 安装 pnpm 8.x（避免构建脚本批准问题）
-RUN npm install -g pnpm@8
+# 安装 pnpm
+RUN npm install -g pnpm
 
 # 安装构建工具（原生模块需要）
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -18,10 +18,10 @@ COPY pnpm-lock.yaml ./
 COPY package.json ./
 
 COPY pnpm-workspace.yaml ./
+#COPY patches ./patches
 
 # 使用 pnpm 安装生产依赖（不使用 frozen-lockfile 以允许更新）
-# 使用 --unsafe-perm 允许构建脚本运行
-RUN pnpm install --prod --no-frozen-lockfile --unsafe-perm
+RUN pnpm install --prod --no-frozen-lockfile
 
 # 清理构建工具
 RUN apt-get purge -y python3 make g++ \

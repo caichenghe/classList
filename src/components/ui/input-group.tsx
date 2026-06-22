@@ -1,5 +1,5 @@
 import * as React from "react"
-import { View, Text, Input, Textarea } from "@tarojs/components"
+import { View, Text, Input, Textarea as TaroTextarea } from "@tarojs/components"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -160,12 +160,12 @@ function InputGroupTextarea({
   autoFocus,
   focus,
   ...props
-}: React.ComponentPropsWithoutRef<typeof Textarea> & { autoFocus?: boolean }) {
+}: React.ComponentPropsWithoutRef<typeof TaroTextarea> & { autoFocus?: boolean }) {
   const { setIsFocused } = React.useContext(InputGroupContext)
 
   return (
     <View className="flex h-full flex-1 min-w-20 m-2">
-      <Textarea
+      <TaroTextarea
         data-slot="input-group-control"
         className={cn(
           "flex-1 w-full h-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",

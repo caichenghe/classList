@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Picker } from '@tarojs/components';
+﻿import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import { useState, useEffect, useCallback } from 'react';
 import { Network } from '@/network';
 import { Button } from '@/components/ui/button';
@@ -228,7 +228,7 @@ const IndexPage = () => {
     setFormCourse(courses.length === 1 ? String(courses[0].id) : '');
     setFormDate(date || fmtDate(new Date()));
     setFormStartTime('09:00');
-    setFormEndTime('10:00');
+    setFormEndTime('11:00');
     setFormNotes('');
     setFormLocation('');
     setShowAddDialog(true);

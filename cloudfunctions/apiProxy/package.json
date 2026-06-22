@@ -1,9 +1,0 @@
-{
-  "name": "apiProxy",
-  "version": "1.0.0",
-  "description": "API Proxy for Mini Program",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "latest"
-  }
-}
