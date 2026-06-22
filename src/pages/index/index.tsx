@@ -1,4 +1,4 @@
-﻿import { View, Text, ScrollView, Picker } from '@tarojs/components';
+import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import { useState, useEffect, useCallback } from 'react';
 import { Network } from '@/network';
 import { Button } from '@/components/ui/button';
@@ -94,6 +94,16 @@ const IndexPage = () => {
   const [formEndTime, setFormEndTime] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [formLocation, setFormLocation] = useState('');
+
+  const calculateEndTime = (startTime: string): string => {
+    const parts = startTime.split(':');
+    if (parts.length !== 2) return startTime;
+    let hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    hours += 2;
+    if (hours >= 24) hours -= 24;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
 
   const weekRange = getWeekRange(currentDate);
   const startDateStr = fmtDate(weekRange.start);
@@ -555,7 +565,13 @@ const IndexPage = () => {
                     type="text"
                     placeholder="09:00"
                     value={formStartTime}
-                    onInput={(e) => setFormStartTime(e.detail.value)}
+                    onInput={(e) => {
+                      const newStartTime = e.detail.value;
+                      setFormStartTime(newStartTime);
+                      if (newStartTime) {
+                        setFormEndTime(calculateEndTime(newStartTime));
+                      }
+                    }}
                   />
                 </View>
               </View>
