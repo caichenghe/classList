@@ -1,0 +1,44 @@
+https://github.com/caichenghe/classList
+git clone https://github.com/caichenghe/classList.git /workspace/projects/
+cd /workspace/projects && coze dev
+
+
+
+请重新生成一个 Personal Access Token（需要有 repo 权限），然后把新的 token 发给我，我来帮你推送：
+去 https://github.com/settings/tokens
+点击 Generate new token (classic)
+勾选 repo 全部权限
+生成后把新 token 复制给我
+
+
+513846444@qq.com   Pet&cch123
+
+
+
+https://tcb.cloud.tencent.com/dev?envId=classlist-d2gyum2p4ec32ae91#/platform-run
+
+https://mp.weixin.qq.com/wxamp/user/managev2?action=index&use_role=1&token=603271507&lang=zh_CN
+
+
+
+git 使用：
+ 查看本地分支： git branch        有那些分支，当前分支是什么
+ 创建并切换本地分支： git checkout -b mytest  ， 直接将现用分支切换到新建分支mytest，文件全部继承；
+ 将更新add 到 mytest分支： git add .
+ 查看更新及add状态： git status
+ 提交文件： git commit -m “已完成什么操作”
+ 推送到远程分支： 
+	1、推送并创建远程分支 git push -u origin mytest
+	2、推送到已有分支     git push 
+ 
+ 合并分支：（需要将mytest分支合并到master）
+	1、切换到目标已有分支；git checkout master 
+	2、合并： git merge mytest
+	3、推送最新到master分支
+ 删除分支：
+	1、删除远程跟踪分支 git branch -d -r origin/mytest
+	                git push origin --delete <branch_name>。这个命令可以删除远程分支
+	2、删除本地分支 git branch -d mytest
+	
+ 切换分支： git switch mytest
+ 
